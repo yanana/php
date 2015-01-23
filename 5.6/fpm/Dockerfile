@@ -1,7 +1,10 @@
-FROM debian:jessie
+FROM phusion/baseimage
+
+# Replace apt-get site with a faster mirror
+RUN sed -i.bak -e "s:http\://archive.ubuntu.com/ubuntu/:http\://ftp.iij.ad.jp/pub/linux/ubuntu/archive/:g" /etc/apt/sources.list
 
 # persistent / runtime deps
-RUN apt-get update && apt-get install -y ca-certificates curl libxml2 --no-install-recommends && rm -r /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates curl libxml2 libmcrypt4 --no-install-recommends && rm -r /var/lib/apt/lists/*
 
 # phpize deps
 RUN apt-get update && apt-get install -y autoconf gcc make pkg-config --no-install-recommends && rm -r /var/lib/apt/lists/*
@@ -16,6 +19,7 @@ ENV PHP_EXTRA_CONFIGURE_ARGS --enable-fpm --with-fpm-user=www-data --with-fpm-gr
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3 0BD78B5F97500D450838F95DFE857D9A90D90EC1
 
 ENV PHP_VERSION 5.6.4
+ENV PHPREDIS_VERSION 2.2.7
 
 # --enable-mysqlnd is included below because it's harder to compile after the fact the extensions are (since it's a plugin for several extensions, not an extension in itself)
 RUN buildDeps=" \
@@ -26,6 +30,10 @@ RUN buildDeps=" \
 		libreadline6-dev \
 		libssl-dev \
 		libxml2-dev \
+		bison \
+		flex \
+		re2c \
+		libmcrypt-dev \
 	"; \
 	set -x \
 	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
@@ -46,11 +54,30 @@ RUN buildDeps=" \
 		--with-openssl \
 		--with-readline \
 		--with-zlib \
+		--with-mcrypt \
 	&& make -j"$(nproc)" \
 	&& make install \
 	&& { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
-	&& apt-get purge -y --auto-remove $buildDeps \
-	&& make clean
+	&& make clean \
+  && cd /usr/src/php/ext/mcrypt \
+  && phpize \
+  && ./configure --with-mcrypt \
+  && make && make install && make clean \
+	&& cd / \
+	&& pecl install igbinary \
+	&& echo "extension=igbinary.so" > /usr/local/etc/php/conf.d/igbinary.ini \
+	&& mkdir phpredis \
+	&& curl -SL "https://github.com/phpredis/phpredis/archive/${PHPREDIS_VERSION}.tar.gz" -o phpredis.tar.gz \
+	&& tar -xzf phpredis.tar.gz -C phpredis --strip-components=1 \
+	&& rm phpredis.tar.gz \
+	&& cd phpredis \
+	&& phpize \
+	&& ./configure --enable-redis-igbinary \
+	&& make && make install && make clean \
+	&& cd / \
+	&& rm -rf phpredis \
+	&& echo "extension=redis.so" > /$PHP_INI_DIR/conf.d/redis.ini \
+	&& apt-get purge -y --auto-remove $buildDeps
 
 COPY docker-php-ext-* /usr/local/bin/
 
