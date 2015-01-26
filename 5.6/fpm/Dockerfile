@@ -77,7 +77,9 @@ RUN buildDeps=" \
 	&& cd / \
 	&& rm -rf phpredis \
 	&& echo "extension=redis.so" > /$PHP_INI_DIR/conf.d/redis.ini \
-	&& apt-get purge -y --auto-remove $buildDeps
+	&& apt-get purge -y --auto-remove $buildDeps \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY docker-php-ext-* /usr/local/bin/
 
