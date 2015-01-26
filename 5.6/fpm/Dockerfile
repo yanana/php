@@ -77,6 +77,17 @@ RUN buildDeps=" \
   && cd / \
   && rm -rf phpredis \
   && echo "extension=redis.so" > /$PHP_INI_DIR/conf.d/redis.ini \
+  && apt-get update && apt-get install -y \
+    python-yaml \
+    python-jinja2 \
+    python-httplib2 \
+    python-keyczar \
+    python-paramiko \
+    python-setuptools \
+    python-pkg-resources \
+    python-pip \
+    software-properties-common \
+  && pip install ansible \
   && apt-get purge -y --auto-remove $buildDeps \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
