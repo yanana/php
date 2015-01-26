@@ -87,6 +87,7 @@ RUN buildDeps=" \
     python-pkg-resources \
     python-pip \
     software-properties-common \
+    git \
   && pip install ansible \
   && apt-get purge -y --auto-remove $buildDeps \
   && apt-get clean \
