@@ -23,61 +23,61 @@ ENV PHPREDIS_VERSION 2.2.7
 
 # --enable-mysqlnd is included below because it's harder to compile after the fact the extensions are (since it's a plugin for several extensions, not an extension in itself)
 RUN buildDeps=" \
-		$PHP_EXTRA_BUILD_DEPS \
-		bzip2 \
-		file \
-		libcurl4-openssl-dev \
-		libreadline6-dev \
-		libssl-dev \
-		libxml2-dev \
-		bison \
-		flex \
-		re2c \
-		libmcrypt-dev \
-	"; \
-	set -x \
-	&& apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
-	&& curl -SL "http://php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror" -o php.tar.bz2 \
-	&& curl -SL "http://php.net/get/php-$PHP_VERSION.tar.bz2.asc/from/this/mirror" -o php.tar.bz2.asc \
-	&& gpg --verify php.tar.bz2.asc \
-	&& mkdir -p /usr/src/php \
-	&& tar -xf php.tar.bz2 -C /usr/src/php --strip-components=1 \
-	&& rm php.tar.bz2* \
-	&& cd /usr/src/php \
-	&& ./configure \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-		$PHP_EXTRA_CONFIGURE_ARGS \
-		--disable-cgi \
-		--enable-mysqlnd \
-		--with-curl \
-		--with-openssl \
-		--with-readline \
-		--with-zlib \
-		--with-mcrypt \
-	&& make -j"$(nproc)" \
-	&& make install \
-	&& { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
-	&& make clean \
+    $PHP_EXTRA_BUILD_DEPS \
+    bzip2 \
+    file \
+    libcurl4-openssl-dev \
+    libreadline6-dev \
+    libssl-dev \
+    libxml2-dev \
+    bison \
+    flex \
+    re2c \
+    libmcrypt-dev \
+  "; \
+  set -x \
+  && apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
+  && curl -SL "http://php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror" -o php.tar.bz2 \
+  && curl -SL "http://php.net/get/php-$PHP_VERSION.tar.bz2.asc/from/this/mirror" -o php.tar.bz2.asc \
+  && gpg --verify php.tar.bz2.asc \
+  && mkdir -p /usr/src/php \
+  && tar -xf php.tar.bz2 -C /usr/src/php --strip-components=1 \
+  && rm php.tar.bz2* \
+  && cd /usr/src/php \
+  && ./configure \
+    --with-config-file-path="$PHP_INI_DIR" \
+    --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
+    $PHP_EXTRA_CONFIGURE_ARGS \
+    --disable-cgi \
+    --enable-mysqlnd \
+    --with-curl \
+    --with-openssl \
+    --with-readline \
+    --with-zlib \
+    --with-mcrypt \
+  && make -j"$(nproc)" \
+  && make install \
+  && { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; } \
+  && make clean \
   && cd /usr/src/php/ext/mcrypt \
   && phpize \
   && ./configure --with-mcrypt \
   && make && make install && make clean \
-	&& cd / \
-	&& pecl install igbinary \
-	&& echo "extension=igbinary.so" > /usr/local/etc/php/conf.d/igbinary.ini \
-	&& mkdir phpredis \
-	&& curl -SL "https://github.com/phpredis/phpredis/archive/${PHPREDIS_VERSION}.tar.gz" -o phpredis.tar.gz \
-	&& tar -xzf phpredis.tar.gz -C phpredis --strip-components=1 \
-	&& rm phpredis.tar.gz \
-	&& cd phpredis \
-	&& phpize \
-	&& ./configure --enable-redis-igbinary \
-	&& make && make install && make clean \
-	&& cd / \
-	&& rm -rf phpredis \
-	&& echo "extension=redis.so" > /$PHP_INI_DIR/conf.d/redis.ini \
-	&& apt-get purge -y --auto-remove $buildDeps \
+  && cd / \
+  && pecl install igbinary \
+  && echo "extension=igbinary.so" > /usr/local/etc/php/conf.d/igbinary.ini \
+  && mkdir phpredis \
+  && curl -SL "https://github.com/phpredis/phpredis/archive/${PHPREDIS_VERSION}.tar.gz" -o phpredis.tar.gz \
+  && tar -xzf phpredis.tar.gz -C phpredis --strip-components=1 \
+  && rm phpredis.tar.gz \
+  && cd phpredis \
+  && phpize \
+  && ./configure --enable-redis-igbinary \
+  && make && make install && make clean \
+  && cd / \
+  && rm -rf phpredis \
+  && echo "extension=redis.so" > /$PHP_INI_DIR/conf.d/redis.ini \
+  && apt-get purge -y --auto-remove $buildDeps \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
