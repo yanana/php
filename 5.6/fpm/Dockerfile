@@ -1,8 +1,5 @@
 FROM phusion/baseimage
 
-# Replace apt-get site with a faster mirror
-RUN sed -i.bak -e "s:http\://archive.ubuntu.com/ubuntu/:http\://ftp.iij.ad.jp/pub/linux/ubuntu/archive/:g" /etc/apt/sources.list
-
 # persistent / runtime deps
 RUN apt-get update && apt-get install -y ca-certificates curl libxml2 libmcrypt4 --no-install-recommends && rm -r /var/lib/apt/lists/*
 
