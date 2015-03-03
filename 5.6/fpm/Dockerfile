@@ -32,6 +32,9 @@ RUN buildDeps=" \
     re2c \
     libmcrypt-dev \
   "; \
+  deps=" \
+  mysql-client-5.6 \
+  "; \
   set -x \
   && apt-get update && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
   && curl -SL "http://php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror" -o php.tar.bz2 \
